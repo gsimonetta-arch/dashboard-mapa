@@ -1,42 +1,45 @@
-import type { CoverageDataset, StateCoverageRecord, CoverageSummary } from './coverage.types'
-
-export type WebhookEventType =
-  | 'coverage.full_refresh'
-  | 'coverage.partial_update'
-  | 'coverage.period_changed'
-
-export interface WebhookEnvelope<T = unknown> {
-  event: WebhookEventType
-  payload: T
-  timestamp: string
-  version: string
+/** Real shape returned by the n8n webhook */
+export interface N8nStateEntry {
+  state: string
+  state_name: string
+  customerQuotes: number
+  vendorQuotes: number
+  cqs_con_vq_feasible: number
+  vendors_con_cobertura: number
+  locations: number
+  pct_feasible: number
+  status_cobertura: string
 }
 
-export type FullRefreshPayload = CoverageDataset
-
-export interface PartialUpdatePayload {
-  records: StateCoverageRecord[]
-  summary: CoverageSummary
+export interface N8nEuropeEntry {
+  country: string
+  customerQuotes: number
+  vendorQuotes: number
+  cqs_con_vq_feasible: number
+  vendors_con_cobertura: number
+  locations: number
+  pct_feasible: number
+  status_cobertura: string
 }
 
-export interface PeriodChangedPayload {
-  previousPeriodLabel: string
-  newPeriodLabel: string
-  dataset: CoverageDataset
+export interface N8nRegionSummary {
+  total_states?: number
+  total_countries?: number
+  total_cqs: number
+  total_vqs_feasibles: number
+  total_cqs_feasible: number
+  pct_feasible: number
 }
 
-/** Raw shape returned directly by the n8n webhook (GET endpoint) */
 export interface N8nWebhookResponse {
-  states: Array<{
-    state: string
-    stateName?: string
-    customerQuotes: number
-    vendorQuotes: number
-    categories?: string[]
-    updatedAt?: string
-  }>
-  period?: string
-  generatedAt?: string
+  success: boolean
+  timestamp: string
+  summary: {
+    usa: N8nRegionSummary
+    europe: N8nRegionSummary
+  }
+  states: N8nStateEntry[]
+  europe: N8nEuropeEntry[]
 }
 
 export type ConnectionStatus = 'idle' | 'connecting' | 'connected' | 'error' | 'stale'

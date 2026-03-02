@@ -15,10 +15,11 @@ export function GapRankingList() {
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      <div className="px-4 pb-2 flex-shrink-0">
+      <div className="px-4 pb-2 flex-shrink-0 space-y-0.5">
         <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
-          Ranking por brecha de cobertura
+          Ranking — mayor brecha
         </p>
+        <p className="text-xs text-gray-600">Estados y países con menor factibilidad</p>
       </div>
       <div className="flex-1 overflow-y-auto px-2 space-y-0.5">
         {sorted.map((record, i) => (

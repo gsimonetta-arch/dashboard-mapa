@@ -1,6 +1,6 @@
 import type { StateCoverageRecord } from '../../types/coverage.types'
 import { classifyTier, TIER_COLORS } from '../../utils/coverageClassifier'
-import { formatPercent, formatCount } from '../../utils/formatters'
+import { formatCount } from '../../utils/formatters'
 import { useUiStore } from '../../store/uiStore'
 
 interface Props {
@@ -20,26 +20,21 @@ export function GapRankingRow({ record, rank }: Props) {
     <button
       onClick={() => selectState(isSelected ? null : record.stateCode)}
       className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
-        isSelected
-          ? 'bg-gray-700'
-          : 'hover:bg-gray-800/60'
+        isSelected ? 'bg-gray-700' : 'hover:bg-gray-800/60'
       }`}
     >
-      <span className="text-xs text-gray-600 w-4 flex-shrink-0 tabular-nums">{rank}</span>
-      <span
-        className="w-2.5 h-2.5 rounded-sm flex-shrink-0"
-        style={{ backgroundColor: tierColor }}
-      />
+      <span className="text-xs text-gray-600 w-5 flex-shrink-0 tabular-nums text-right">{rank}</span>
+      <span className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: tierColor }} />
       <div className="flex-1 min-w-0">
-        <div className="flex justify-between items-baseline">
+        <div className="flex justify-between items-baseline gap-2">
           <span className="text-sm text-gray-200 truncate">{record.stateName}</span>
-          <span className="text-sm font-medium tabular-nums text-white ml-2 flex-shrink-0">
-            {formatPercent(record.coverageRatio)}
+          <span className="text-sm font-semibold tabular-nums flex-shrink-0" style={{ color: tierColor }}>
+            {record.pctFeasible.toFixed(1)}%
           </span>
         </div>
         <div className="flex justify-between text-xs text-gray-600 mt-0.5">
-          <span>{formatCount(record.customerQuotes)} clientes</span>
-          <span>{formatCount(record.vendorQuotes)} vendors</span>
+          <span>{formatCount(record.customerQuotes)} CQs · {formatCount(record.cqsWithFeasibleVQ)} factibles</span>
+          <span className="text-gray-700 ml-1">{record.region === 'europe' ? '🇪🇺' : '🇺🇸'}</span>
         </div>
       </div>
     </button>

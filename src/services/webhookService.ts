@@ -1,52 +1,77 @@
-import type { N8nWebhookResponse } from '../types/webhook.types'
+import type { N8nWebhookResponse, N8nStateEntry, N8nEuropeEntry } from '../types/webhook.types'
 import type { CoverageDataset, StateCoverageRecord } from '../types/coverage.types'
-import { computeRatio } from '../utils/coverageClassifier'
 
 const WEBHOOK_URL = import.meta.env.VITE_WEBHOOK_URL as string | undefined
 
-const STATE_NAMES: Record<string, string> = {
-  AL: 'Alabama', AK: 'Alaska', AZ: 'Arizona', AR: 'Arkansas', CA: 'California',
-  CO: 'Colorado', CT: 'Connecticut', DE: 'Delaware', FL: 'Florida', GA: 'Georgia',
-  HI: 'Hawaii', ID: 'Idaho', IL: 'Illinois', IN: 'Indiana', IA: 'Iowa',
-  KS: 'Kansas', KY: 'Kentucky', LA: 'Louisiana', ME: 'Maine', MD: 'Maryland',
-  MA: 'Massachusetts', MI: 'Michigan', MN: 'Minnesota', MS: 'Mississippi',
-  MO: 'Missouri', MT: 'Montana', NE: 'Nebraska', NV: 'Nevada', NH: 'New Hampshire',
-  NJ: 'New Jersey', NM: 'New Mexico', NY: 'New York', NC: 'North Carolina',
-  ND: 'North Dakota', OH: 'Ohio', OK: 'Oklahoma', OR: 'Oregon', PA: 'Pennsylvania',
-  RI: 'Rhode Island', SC: 'South Carolina', SD: 'South Dakota', TN: 'Tennessee',
-  TX: 'Texas', UT: 'Utah', VT: 'Vermont', VA: 'Virginia', WA: 'Washington',
-  WV: 'West Virginia', WI: 'Wisconsin', WY: 'Wyoming',
+function mapUsaState(s: N8nStateEntry, now: string): StateCoverageRecord {
+  return {
+    stateCode: s.state.toUpperCase(),
+    stateName: s.state_name,
+    region: 'usa',
+    customerQuotes: s.customerQuotes,
+    vendorQuotes: s.vendorQuotes,
+    cqsWithFeasibleVQ: s.cqs_con_vq_feasible,
+    vendorsWithCoverage: s.vendors_con_cobertura,
+    locations: s.locations,
+    pctFeasible: s.pct_feasible,
+    statusCobertura: s.status_cobertura,
+    coverageRatio: s.customerQuotes > 0 ? s.pct_feasible / 100 : null,
+    lastUpdatedAt: now,
+  }
+}
+
+const COUNTRY_CODES: Record<string, string> = {
+  'United Kingdom': 'GB', 'Germany': 'DE', 'France': 'FR', 'Spain': 'ES',
+  'Italy': 'IT', 'Netherlands': 'NL', 'Poland': 'PL', 'Belgium': 'BE',
+  'Portugal': 'PT', 'Sweden': 'SE', 'Switzerland': 'CH', 'Austria': 'AT',
+  'Denmark': 'DK', 'Norway': 'NO', 'Finland': 'FI', 'Ireland': 'IE',
+  'Czech Republic': 'CZ', 'Romania': 'RO', 'Hungary': 'HU', 'Greece': 'GR',
+}
+
+function mapEuropeCountry(c: N8nEuropeEntry, now: string): StateCoverageRecord {
+  const code = COUNTRY_CODES[c.country] ?? c.country.slice(0, 2).toUpperCase()
+  return {
+    stateCode: code,
+    stateName: c.country,
+    region: 'europe',
+    customerQuotes: c.customerQuotes,
+    vendorQuotes: c.vendorQuotes,
+    cqsWithFeasibleVQ: c.cqs_con_vq_feasible,
+    vendorsWithCoverage: c.vendors_con_cobertura,
+    locations: c.locations,
+    pctFeasible: c.pct_feasible,
+    statusCobertura: c.status_cobertura,
+    coverageRatio: c.customerQuotes > 0 ? c.pct_feasible / 100 : null,
+    lastUpdatedAt: now,
+  }
 }
 
 function parseN8nResponse(raw: N8nWebhookResponse): CoverageDataset {
   const now = new Date().toISOString()
-  const records: StateCoverageRecord[] = raw.states.map(s => {
-    const cq = s.customerQuotes ?? 0
-    const vq = s.vendorQuotes ?? 0
-    return {
-      stateCode: s.state.toUpperCase(),
-      stateName: s.stateName ?? STATE_NAMES[s.state.toUpperCase()] ?? s.state,
-      customerQuotes: cq,
-      vendorQuotes: vq,
-      coverageRatio: computeRatio(cq, vq),
-      topGapCategories: s.categories,
-      lastUpdatedAt: s.updatedAt ?? now,
-    }
-  })
-
-  const totalCQ = records.reduce((a, r) => a + r.customerQuotes, 0)
-  const totalVQ = records.reduce((a, r) => a + r.vendorQuotes, 0)
+  const usaRecords = (raw.states ?? []).map(s => mapUsaState(s, now))
+  const europeRecords = (raw.europe ?? []).map(c => mapEuropeCountry(c, now))
+  const usaSummary = raw.summary?.usa
+  const euSummary = raw.summary?.europe
 
   return {
-    reportGeneratedAt: raw.generatedAt ?? now,
-    periodLabel: raw.period ?? 'En vivo',
-    records,
+    reportGeneratedAt: raw.timestamp ?? now,
+    periodLabel: 'En vivo',
+    records: [...usaRecords, ...europeRecords],
     summary: {
-      totalCustomerQuotes: totalCQ,
-      totalVendorQuotes: totalVQ,
-      nationalCoverageRatio: computeRatio(totalCQ, totalVQ),
-      statesWithCriticalGap: records.filter(r => r.coverageRatio !== null && r.coverageRatio < 0.40).length,
-      statesWithGoodCoverage: records.filter(r => r.coverageRatio !== null && r.coverageRatio >= 0.90).length,
+      usa: {
+        totalUnits: usaSummary?.total_states ?? usaRecords.length,
+        totalCqs: usaSummary?.total_cqs ?? usaRecords.reduce((a, r) => a + r.customerQuotes, 0),
+        totalVqsFeasibles: usaSummary?.total_vqs_feasibles ?? usaRecords.reduce((a, r) => a + r.vendorQuotes, 0),
+        totalCqsFeasible: usaSummary?.total_cqs_feasible ?? usaRecords.reduce((a, r) => a + r.cqsWithFeasibleVQ, 0),
+        pctFeasible: usaSummary?.pct_feasible ?? 0,
+      },
+      europe: {
+        totalUnits: euSummary?.total_countries ?? europeRecords.length,
+        totalCqs: euSummary?.total_cqs ?? europeRecords.reduce((a, r) => a + r.customerQuotes, 0),
+        totalVqsFeasibles: euSummary?.total_vqs_feasibles ?? europeRecords.reduce((a, r) => a + r.vendorQuotes, 0),
+        totalCqsFeasible: euSummary?.total_cqs_feasible ?? europeRecords.reduce((a, r) => a + r.cqsWithFeasibleVQ, 0),
+        pctFeasible: euSummary?.pct_feasible ?? 0,
+      },
     },
   }
 }
@@ -58,5 +83,3 @@ export async function fetchCoverageData(): Promise<CoverageDataset> {
   const raw = await res.json() as N8nWebhookResponse
   return parseN8nResponse(raw)
 }
-
-export { parseN8nResponse }

@@ -16,16 +16,25 @@ export function StateDetailCard() {
   const tier = classifyTier(record.coverageRatio)
   const tierColor = TIER_COLORS[tier]
 
-  const maxVal = Math.max(record.customerQuotes, record.vendorQuotes)
-  const cqPct = maxVal > 0 ? (record.customerQuotes / maxVal) * 100 : 0
-  const vqPct = maxVal > 0 ? (record.vendorQuotes / maxVal) * 100 : 0
+  // Bar widths relative to customerQuotes
+  const maxBar = Math.max(record.customerQuotes, record.cqsWithFeasibleVQ * 20)
+  const cqPct  = maxBar > 0 ? Math.min((record.customerQuotes / maxBar) * 100, 100) : 0
+  const feasiblePct = record.customerQuotes > 0
+    ? Math.min((record.cqsWithFeasibleVQ / record.customerQuotes) * 100 * 5, 100)
+    : 0
 
   return (
-    <div className="flex flex-col gap-4 p-4 flex-1">
+    <div className="flex flex-col gap-4 p-4 flex-1 overflow-y-auto">
+      {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h2 className="text-base font-semibold text-white">{record.stateName}</h2>
-          <span className="text-xs text-gray-500">{record.stateCode}</span>
+          <div className="flex items-center gap-2">
+            <h2 className="text-base font-semibold text-white">{record.stateName}</h2>
+            <span className="text-xs px-1.5 py-0.5 bg-gray-800 rounded text-gray-400 border border-gray-700">
+              {record.region === 'europe' ? 'Europa' : 'USA'}
+            </span>
+          </div>
+          <span className="text-xs text-gray-500">{record.statusCobertura}</span>
         </div>
         <button
           onClick={() => selectState(null)}
@@ -38,53 +47,55 @@ export function StateDetailCard() {
         </button>
       </div>
 
+      {/* Gauge */}
       <div className="flex justify-center">
         <CoverageGauge ratio={record.coverageRatio} />
       </div>
 
-      <div className="space-y-3">
-        <div className="space-y-1">
-          <div className="flex justify-between text-xs text-gray-500 mb-1">
-            <span>Clientes</span>
-            <span className="text-gray-300 tabular-nums">{formatCount(record.customerQuotes)}</span>
+      {/* Key metrics grid */}
+      <div className="grid grid-cols-2 gap-2">
+        {[
+          { label: 'Total CQs',    value: formatCount(record.customerQuotes) },
+          { label: 'Total VQs',    value: formatCount(record.vendorQuotes) },
+          { label: 'CQs factibles', value: formatCount(record.cqsWithFeasibleVQ), color: tierColor },
+          { label: 'Vendors',      value: formatCount(record.vendorsWithCoverage) },
+          { label: 'Ubicaciones',  value: formatCount(record.locations) },
+          { label: 'Factibilidad', value: record.pctFeasible.toFixed(1) + '%', color: tierColor },
+        ].map(({ label, value, color }) => (
+          <div key={label} className="bg-gray-800/50 rounded-lg px-3 py-2">
+            <p className="text-xs text-gray-500">{label}</p>
+            <p className="text-sm font-semibold tabular-nums" style={{ color: color ?? '#f9fafb' }}>{value}</p>
           </div>
-          <div className="w-full bg-gray-800 rounded-full h-2">
-            <div
-              className="bg-indigo-500 h-2 rounded-full transition-all duration-500"
-              style={{ width: `${cqPct}%` }}
-            />
-          </div>
-        </div>
+        ))}
+      </div>
 
-        <div className="space-y-1">
-          <div className="flex justify-between text-xs text-gray-500 mb-1">
-            <span>Vendors</span>
-            <span className="text-gray-300 tabular-nums">{formatCount(record.vendorQuotes)}</span>
+      {/* Demand vs feasible bar */}
+      <div className="space-y-2">
+        <p className="text-xs text-gray-500 uppercase tracking-wider">Demanda vs cobertura</p>
+        <div className="space-y-1.5">
+          <div>
+            <div className="flex justify-between text-xs text-gray-500 mb-1">
+              <span>CQs totales</span>
+              <span className="text-gray-300 tabular-nums">{formatCount(record.customerQuotes)}</span>
+            </div>
+            <div className="w-full bg-gray-800 rounded-full h-1.5">
+              <div className="bg-indigo-500 h-1.5 rounded-full" style={{ width: `${cqPct}%` }} />
+            </div>
           </div>
-          <div className="w-full bg-gray-800 rounded-full h-2">
-            <div
-              className="h-2 rounded-full transition-all duration-500"
-              style={{ width: `${vqPct}%`, backgroundColor: tierColor }}
-            />
+          <div>
+            <div className="flex justify-between text-xs text-gray-500 mb-1">
+              <span>CQs con VQ factible</span>
+              <span className="tabular-nums" style={{ color: tierColor }}>
+                {formatCount(record.cqsWithFeasibleVQ)}
+              </span>
+            </div>
+            <div className="w-full bg-gray-800 rounded-full h-1.5">
+              <div className="h-1.5 rounded-full transition-all duration-500"
+                style={{ width: `${feasiblePct}%`, backgroundColor: tierColor }} />
+            </div>
           </div>
         </div>
       </div>
-
-      {record.topGapCategories && record.topGapCategories.length > 0 && (
-        <div>
-          <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Categorías con brecha</p>
-          <div className="flex flex-wrap gap-1.5">
-            {record.topGapCategories.map(cat => (
-              <span
-                key={cat}
-                className="px-2 py-0.5 bg-gray-800 rounded text-xs text-gray-300 border border-gray-700"
-              >
-                {cat}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   )
 }

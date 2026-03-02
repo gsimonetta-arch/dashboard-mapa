@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { CoverageDataset, CoverageSummary, StateCoverageRecord, StateCode, CoverageTier } from '../types/coverage.types'
+import type { CoverageDataset, StateCoverageRecord, StateCode, CoverageTier } from '../types/coverage.types'
 import { classifyTier } from '../utils/coverageClassifier'
 
 interface CoverageState {
@@ -7,7 +7,6 @@ interface CoverageState {
   recordsByState: Record<StateCode, StateCoverageRecord>
 
   ingestFullRefresh: (dataset: CoverageDataset) => void
-  ingestPartialUpdate: (records: StateCoverageRecord[], summary: CoverageSummary) => void
   clearData: () => void
 
   getRecord: (stateCode: StateCode) => StateCoverageRecord | undefined
@@ -32,21 +31,6 @@ export const useCoverageStore = create<CoverageState>((set, get) => ({
     })
   },
 
-  ingestPartialUpdate: (records, summary) => {
-    const prev = get().dataset
-    if (!prev) return
-    const next = { ...prev, summary, records: [...prev.records] }
-    for (const incoming of records) {
-      const idx = next.records.findIndex(r => r.stateCode === incoming.stateCode)
-      if (idx >= 0) next.records[idx] = incoming
-      else next.records.push(incoming)
-    }
-    set({
-      dataset: next,
-      recordsByState: buildIndex(next.records),
-    })
-  },
-
   clearData: () => set({ dataset: null, recordsByState: {} }),
 
   getRecord: (stateCode) => get().recordsByState[stateCode],
@@ -56,6 +40,7 @@ export const useCoverageStore = create<CoverageState>((set, get) => ({
     return classifyTier(r?.coverageRatio ?? null)
   },
 
+  // Sorted ascending by pctFeasible (worst gap first)
   getSortedByGap: () => {
     const records = Object.values(get().recordsByState)
     return [...records].sort((a, b) => {

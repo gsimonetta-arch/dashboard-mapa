@@ -1,49 +1,53 @@
 import { useCoverageStore } from '../../store/coverageStore'
-import { formatPercent, formatCount } from '../../utils/formatters'
+import { formatCount } from '../../utils/formatters'
 import { KpiCard } from './KpiCard'
+
+function pctAccent(pct: number | undefined): 'red' | 'yellow' | 'green' | 'default' {
+  if (pct === undefined) return 'default'
+  if (pct < 1)  return 'red'
+  if (pct < 3)  return 'yellow'
+  if (pct >= 6) return 'green'
+  return 'yellow'
+}
+
+function fmtPct(n: number | undefined): string {
+  if (n === undefined) return '—'
+  return n.toFixed(1) + '%'
+}
 
 export function KpiRibbon() {
   const summary = useCoverageStore(s => s.dataset?.summary)
 
-  const nationalRatioStr = summary ? formatPercent(summary.nationalCoverageRatio) : '—'
-  const nationalAccent = (() => {
-    if (!summary?.nationalCoverageRatio) return 'default' as const
-    const r = summary.nationalCoverageRatio
-    if (r < 0.40) return 'red' as const
-    if (r < 0.70) return 'yellow' as const
-    if (r >= 0.90) return 'green' as const
-    return 'yellow' as const
-  })()
-
   return (
-    <div className="flex gap-3 px-6 py-3 bg-gray-950 border-b border-gray-800 flex-shrink-0">
+    <div className="flex gap-3 px-6 py-3 bg-gray-950 border-b border-gray-800 flex-shrink-0 overflow-x-auto">
       <KpiCard
-        label="Cobertura Nacional"
-        value={nationalRatioStr}
-        sub="Vendors / Clientes"
-        accent={nationalAccent}
+        label="USA — Factibilidad"
+        value={fmtPct(summary?.usa.pctFeasible)}
+        sub={`${formatCount(summary?.usa.totalCqs ?? 0)} CQs`}
+        accent={pctAccent(summary?.usa.pctFeasible)}
       />
       <KpiCard
-        label="Quotes de Clientes"
-        value={summary ? formatCount(summary.totalCustomerQuotes) : '—'}
-        sub="Demanda total"
+        label="CQs Factibles USA"
+        value={formatCount(summary?.usa.totalCqsFeasible ?? 0)}
+        sub="Con VQ factible"
+        accent="cyan"
       />
       <KpiCard
-        label="Quotes de Vendors"
-        value={summary ? formatCount(summary.totalVendorQuotes) : '—'}
-        sub="Oferta total"
+        label="VQs Disponibles USA"
+        value={formatCount(summary?.usa.totalVqsFeasibles ?? 0)}
+        sub="Oferta total vendors"
       />
       <KpiCard
-        label="Estados Críticos"
-        value={summary ? String(summary.statesWithCriticalGap) : '—'}
-        sub="Cobertura < 40%"
-        accent={summary && summary.statesWithCriticalGap > 0 ? 'red' : 'default'}
+        label="Europa — Factibilidad"
+        value={fmtPct(summary?.europe.pctFeasible)}
+        sub={`${formatCount(summary?.europe.totalCqs ?? 0)} CQs`}
+        accent={pctAccent(summary?.europe.pctFeasible)}
       />
       <KpiCard
-        label="Buena Cobertura"
-        value={summary ? String(summary.statesWithGoodCoverage) : '—'}
-        sub="Cobertura ≥ 90%"
-        accent={summary && summary.statesWithGoodCoverage > 0 ? 'green' : 'default'}
+        label="CQs Factibles Europa"
+        value={formatCount(summary?.europe.totalCqsFeasible ?? 0)}
+        sub="Con VQ factible"
+        accent="cyan"
       />
     </div>
   )
