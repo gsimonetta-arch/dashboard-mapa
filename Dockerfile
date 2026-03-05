@@ -19,8 +19,9 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 RUN chown -R nginx:0 /usr/share/nginx/html \
     /var/cache/nginx \
     /var/log/nginx \
+    /var/run \
     /etc/nginx/conf.d \
- && chmod -R g+rwX /var/cache/nginx /var/log/nginx /etc/nginx/conf.d
+ && chmod -R g+rwX /var/cache/nginx /var/log/nginx /var/run /etc/nginx/conf.d
 
 # nginx config: serve SPA (all routes → index.html) on port 8080
 COPY nginx.conf /etc/nginx/conf.d/default.conf
