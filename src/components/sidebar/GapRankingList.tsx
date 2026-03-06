@@ -1,9 +1,13 @@
 import { useCoverageStore } from '../../store/coverageStore'
+import { useUiStore } from '../../store/uiStore'
 import { GapRankingRow } from './GapRankingRow'
 
 export function GapRankingList() {
   const getSortedByGap = useCoverageStore(s => s.getSortedByGap)
-  const sorted = getSortedByGap()
+  const activeRegion = useUiStore(s => s.activeRegion)
+  const sorted = getSortedByGap().filter(r => r.region === activeRegion)
+
+  const regionLabel = activeRegion === 'usa' ? 'estados USA' : 'países de Europa'
 
   if (sorted.length === 0) {
     return (
@@ -19,7 +23,9 @@ export function GapRankingList() {
         <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
           Ranking — mayor brecha
         </p>
-        <p className="text-xs text-gray-600">Estados y países con menor factibilidad</p>
+        <p className="text-xs text-gray-600">
+          {regionLabel.charAt(0).toUpperCase() + regionLabel.slice(1)} con menor factibilidad
+        </p>
       </div>
       <div className="flex-1 overflow-y-auto px-2 space-y-0.5">
         {sorted.map((record, i) => (
