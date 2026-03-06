@@ -97,15 +97,10 @@ export function useMap(): UseMapReturn {
         },
       })
 
-      // Wait for the GeoJSON source to finish loading before signaling ready,
-      // so that setFeatureState calls in useChoropleth find actual features.
-      const onSourceData = () => {
-        if (map.isSourceLoaded('states')) {
-          setIsLoaded(true)
-          map.off('sourcedata', onSourceData)
-        }
-      }
-      map.on('sourcedata', onSourceData)
+      // 'idle' fires once MapLibre finishes all pending rendering
+      // (including fetching and tiling the GeoJSON), ensuring
+      // setFeatureState in useChoropleth finds actual features.
+      map.once('idle', () => setIsLoaded(true))
     })
 
     mapRef.current = map
