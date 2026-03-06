@@ -5,6 +5,7 @@ import { fetchCoverageData } from '../services/webhookService'
 import { buildMockDataset } from '../utils/mockData'
 
 const POLL_INTERVAL_MS = parseInt(import.meta.env.VITE_POLL_INTERVAL_MS ?? '60000', 10)
+const ERROR_RETRY_MS = Math.min(15_000, POLL_INTERVAL_MS) // retry faster after errors
 const USE_MOCK = !import.meta.env.VITE_WEBHOOK_URL
 
 export function useWebhook(): void {
@@ -20,6 +21,8 @@ export function useWebhook(): void {
       if (cancelled) return
 
       setConnectionStatus('connecting')
+      let nextDelay = POLL_INTERVAL_MS
+
       try {
         const dataset = USE_MOCK ? buildMockDataset() : await fetchCoverageData()
         if (!cancelled) {
@@ -28,12 +31,15 @@ export function useWebhook(): void {
           setLastReceivedAt(new Date().toISOString())
         }
       } catch (err) {
-        console.error('[webhook] fetch error:', err)
+        // Log the actual error so it's visible in browser DevTools
+        const msg = err instanceof Error ? err.message : String(err)
+        console.error('[webhook] fetch error — check VITE_WEBHOOK_URL and CORS headers:', msg)
         if (!cancelled) setConnectionStatus('error')
+        nextDelay = ERROR_RETRY_MS // retry sooner after an error
       }
 
       if (!cancelled) {
-        timerRef.current = setTimeout(poll, POLL_INTERVAL_MS)
+        timerRef.current = setTimeout(poll, nextDelay)
       }
     }
 

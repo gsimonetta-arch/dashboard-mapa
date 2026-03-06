@@ -1,16 +1,15 @@
 import { useEffect } from 'react'
 import type maplibregl from 'maplibre-gl'
+import { GeoJSONSource } from 'maplibre-gl'
 import type { Feature, FeatureCollection, Geometry } from 'geojson'
 import { useCoverageStore } from '../store/coverageStore'
 import { useUiStore } from '../store/uiStore'
 import { classifyTier } from '../utils/coverageClassifier'
 import type { Region } from '../types/coverage.types'
-
-// GeoJSON bundled at build time — no runtime fetch, no nginx dependency.
-// The Vite 'geojson' plugin in vite.config.ts transforms these imports.
 import usStatesGeoJson from '../data/us-states.geojson'
 import europeCountriesGeoJson from '../data/europe-countries.geojson'
 
+// Base GeoJSON per region (bundled at build time, no runtime fetch needed)
 const GEO_DATA: Record<string, FeatureCollection> = {
   usa: usStatesGeoJson,
   europe: europeCountriesGeoJson,
@@ -26,8 +25,9 @@ export function useChoropleth(
   const selectedStateCode = useUiStore(s => s.selectedStateCode)
   const hoveredStateCode = useUiStore(s => s.hoveredStateCode)
 
-  // Update map source with tier + code embedded in each feature's properties.
-  // Data is bundled — this runs synchronously, no async fetch needed.
+  // Update map source with tier + code in feature properties.
+  // The source already has base geometry from useMap (initialData).
+  // This effect overlays coverage tier so features get their color.
   useEffect(() => {
     const map = mapRef.current
     if (!map || !isLoaded) return
@@ -35,21 +35,24 @@ export function useChoropleth(
     const base = GEO_DATA[region]
     if (!base) return
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const source = map.getSource(sourceId) as any
-    if (!source?.setData) return
+    const source = map.getSource(sourceId) as GeoJSONSource | undefined
+    if (!source) return
 
-    source.setData(buildUpdatedGeoJson(base, recordsByState))
+    try {
+      source.setData(buildUpdatedGeoJson(base, recordsByState))
+    } catch (err) {
+      console.error('[choropleth] source.setData failed:', err)
+    }
   }, [mapRef, isLoaded, recordsByState, sourceId, region])
 
-  // Hover overlay filter — uses `code` property (not ['id']) for MapLibre v5 reliability
+  // Hover overlay filter
   useEffect(() => {
     const map = mapRef.current
     if (!map || !isLoaded) return
     const filter: maplibregl.FilterSpecification = hoveredStateCode
       ? ['==', ['get', 'code'], hoveredStateCode]
       : ['boolean', false]
-    map.setFilter(`${sourceId}-hovered`, filter)
+    try { map.setFilter(`${sourceId}-hovered`, filter) } catch { /* layer not yet ready */ }
   }, [mapRef, isLoaded, hoveredStateCode, sourceId])
 
   // Selected outline filter
@@ -59,7 +62,7 @@ export function useChoropleth(
     const filter: maplibregl.FilterSpecification = selectedStateCode
       ? ['==', ['get', 'code'], selectedStateCode]
       : ['boolean', false]
-    map.setFilter(`${sourceId}-selected`, filter)
+    try { map.setFilter(`${sourceId}-selected`, filter) } catch { /* layer not yet ready */ }
   }, [mapRef, isLoaded, selectedStateCode, sourceId])
 }
 
