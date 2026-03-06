@@ -8,7 +8,7 @@
  * ─── VERIFY THESE COLUMN NAMES MATCH YOUR SPREADSHEET ───────────────────────
  *   location_key   latitude   longitude   address   country_name
  *   region         city_name  state_name  total_cqs  cqs_con_vq
- *   total_vqs_fe   vendors_col  clusters_qu  vendors_fea  pct_fe
+ *   total_vqs_feasible   vendors_con_cobertura  pct_feasible
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
@@ -74,9 +74,9 @@ for (const row of usaRows) {
   const s = usaByState[code]
   const totalCqs  = num(row.total_cqs)
   const cqsConVq  = num(row.cqs_con_vq)
-  const totalVqsFe = num(row.total_vqs_fe)   // ← verify exact column name
-  const vendorsCol = num(row.vendors_col)     // ← verify exact column name
-  const pctFe     = num(row.pct_fe)          // ← verify exact column name
+  const totalVqsFe = num(row.total_vqs_feasible)
+  const vendorsCol = num(row.vendors_con_cobertura)
+  const pctFe     = num(row.pct_feasible)
 
   s.customerQuotes        += totalCqs
   s.vendorQuotes          += totalVqsFe
@@ -123,9 +123,9 @@ for (const row of europeRows) {
   const c = europeByCountry[country]
   const totalCqs   = num(row.total_cqs)
   const cqsConVq   = num(row.cqs_con_vq)
-  const totalVqsFe = num(row.total_vqs_fe)   // ← verify exact column name
-  const vendorsCol = num(row.vendors_col)     // ← verify exact column name
-  const pctFe      = num(row.pct_fe)         // ← verify exact column name
+  const totalVqsFe = num(row.total_vqs_feasible)
+  const vendorsCol = num(row.vendors_con_cobertura)
+  const pctFe      = num(row.pct_feasible)
 
   c.customerQuotes        += totalCqs
   c.vendorQuotes          += totalVqsFe
