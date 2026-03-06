@@ -97,7 +97,15 @@ export function useMap(): UseMapReturn {
         },
       })
 
-      setIsLoaded(true)
+      // Wait for the GeoJSON source to finish loading before signaling ready,
+      // so that setFeatureState calls in useChoropleth find actual features.
+      const onSourceData = () => {
+        if (map.isSourceLoaded('states')) {
+          setIsLoaded(true)
+          map.off('sourcedata', onSourceData)
+        }
+      }
+      map.on('sourcedata', onSourceData)
     })
 
     mapRef.current = map
