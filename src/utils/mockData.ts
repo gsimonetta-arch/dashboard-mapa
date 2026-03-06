@@ -1,4 +1,43 @@
-import type { CoverageDataset, StateCoverageRecord } from '../types/coverage.types'
+import type { CoverageDataset, StateCoverageRecord, CqLocation } from '../types/coverage.types'
+
+// Sample CQ locations (lat/lng) for development — replaced by real webhook data in production
+const MOCK_CQ_LOCATIONS: CqLocation[] = [
+  // Texas
+  { id: 'TX-001', lat: 29.76,  lng: -95.36,  state: 'TX', region: 'usa', status: 'not_feasible' },
+  { id: 'TX-002', lat: 32.77,  lng: -96.79,  state: 'TX', region: 'usa', status: 'not_feasible' },
+  { id: 'TX-003', lat: 29.42,  lng: -98.49,  state: 'TX', region: 'usa', status: 'feasible' },
+  { id: 'TX-004', lat: 30.26,  lng: -97.74,  state: 'TX', region: 'usa', status: 'not_feasible' },
+  { id: 'TX-005', lat: 31.75,  lng: -106.48, state: 'TX', region: 'usa', status: 'not_feasible' },
+  // California
+  { id: 'CA-001', lat: 34.05,  lng: -118.24, state: 'CA', region: 'usa', status: 'feasible' },
+  { id: 'CA-002', lat: 37.77,  lng: -122.41, state: 'CA', region: 'usa', status: 'feasible' },
+  { id: 'CA-003', lat: 32.71,  lng: -117.15, state: 'CA', region: 'usa', status: 'feasible' },
+  { id: 'CA-004', lat: 38.57,  lng: -121.48, state: 'CA', region: 'usa', status: 'not_feasible' },
+  // Florida
+  { id: 'FL-001', lat: 25.77,  lng: -80.19,  state: 'FL', region: 'usa', status: 'not_feasible' },
+  { id: 'FL-002', lat: 28.53,  lng: -81.37,  state: 'FL', region: 'usa', status: 'feasible' },
+  { id: 'FL-003', lat: 27.94,  lng: -82.45,  state: 'FL', region: 'usa', status: 'not_feasible' },
+  { id: 'FL-004', lat: 30.33,  lng: -81.65,  state: 'FL', region: 'usa', status: 'not_feasible' },
+  // New York
+  { id: 'NY-001', lat: 40.71,  lng: -74.00,  state: 'NY', region: 'usa', status: 'feasible' },
+  { id: 'NY-002', lat: 42.88,  lng: -78.87,  state: 'NY', region: 'usa', status: 'not_feasible' },
+  { id: 'NY-003', lat: 42.65,  lng: -73.75,  state: 'NY', region: 'usa', status: 'not_feasible' },
+  // Illinois
+  { id: 'IL-001', lat: 41.85,  lng: -87.65,  state: 'IL', region: 'usa', status: 'feasible' },
+  { id: 'IL-002', lat: 39.80,  lng: -89.64,  state: 'IL', region: 'usa', status: 'not_feasible' },
+  // United Kingdom
+  { id: 'GB-001', lat: 51.50,  lng: -0.12,   state: 'GB', region: 'europe', status: 'feasible' },
+  { id: 'GB-002', lat: 53.48,  lng: -2.24,   state: 'GB', region: 'europe', status: 'not_feasible' },
+  { id: 'GB-003', lat: 52.47,  lng: -1.89,   state: 'GB', region: 'europe', status: 'not_feasible' },
+  // Germany
+  { id: 'DE-001', lat: 52.52,  lng: 13.40,   state: 'DE', region: 'europe', status: 'feasible' },
+  { id: 'DE-002', lat: 48.13,  lng: 11.57,   state: 'DE', region: 'europe', status: 'feasible' },
+  { id: 'DE-003', lat: 53.55,  lng: 9.99,    state: 'DE', region: 'europe', status: 'not_feasible' },
+  // France
+  { id: 'FR-001', lat: 48.85,  lng: 2.35,    state: 'FR', region: 'europe', status: 'not_feasible' },
+  { id: 'FR-002', lat: 45.74,  lng: 4.83,    state: 'FR', region: 'europe', status: 'feasible' },
+  { id: 'FR-003', lat: 43.29,  lng: 5.38,    state: 'FR', region: 'europe', status: 'not_feasible' },
+]
 
 // pct_feasible values are intentionally low (1–8%) to match real webhook scale
 const RAW_USA = [
@@ -127,6 +166,7 @@ export function buildMockDataset(): CoverageDataset {
     reportGeneratedAt: now,
     periodLabel: 'Q1 2026',
     records: allRecords,
+    cqLocations: MOCK_CQ_LOCATIONS,
     summary: {
       usa: {
         totalUnits: usaRecords.length,

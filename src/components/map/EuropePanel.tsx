@@ -1,6 +1,8 @@
 import { useMap, EUROPE_MAP_CONFIG } from '../../hooks/useMap'
 import { useChoropleth } from '../../hooks/useChoropleth'
 import { useMapInteraction } from '../../hooks/useMapInteraction'
+import { useCqMarkers } from '../../hooks/useCqMarkers'
+import { useUiStore } from '../../store/uiStore'
 import { MapLegend } from './MapLegend'
 import { MapTooltip } from './MapTooltip'
 import 'maplibre-gl/dist/maplibre-gl.css'
@@ -9,6 +11,10 @@ export function EuropePanel() {
   const { mapRef, containerRef, isLoaded } = useMap(EUROPE_MAP_CONFIG)
   useChoropleth(mapRef, isLoaded, EUROPE_MAP_CONFIG.sourceId, 'europe')
   useMapInteraction(mapRef, isLoaded, `${EUROPE_MAP_CONFIG.sourceId}-fill`)
+  useCqMarkers(mapRef, isLoaded, 'europe')
+
+  const showCqMarkers   = useUiStore(s => s.showCqMarkers)
+  const toggleCqMarkers = useUiStore(s => s.toggleCqMarkers)
 
   return (
     <div className="relative flex-1 bg-gray-950 min-w-0">
@@ -19,6 +25,16 @@ export function EuropePanel() {
         <>
           <MapLegend />
           <MapTooltip />
+          <button
+            onClick={toggleCqMarkers}
+            className={`absolute bottom-6 right-4 z-10 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+              showCqMarkers
+                ? 'bg-cyan-700 border-cyan-500 text-white'
+                : 'bg-gray-900/90 border-gray-700 text-gray-400 hover:text-white hover:border-gray-500'
+            }`}
+          >
+            {showCqMarkers ? 'Ocultar CQs' : 'Ver CQs'}
+          </button>
         </>
       )}
       {!isLoaded && (

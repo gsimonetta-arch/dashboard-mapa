@@ -31,6 +31,16 @@ export interface N8nRegionSummary {
   pct_feasible: number
 }
 
+/** Individual CQ location as returned by the webhook */
+export interface N8nCqLocation {
+  id: string
+  lat: number
+  lng: number
+  state: string                         // state/country code, e.g. "TX", "DE"
+  region?: 'usa' | 'europe'
+  status: 'feasible' | 'not_feasible'
+}
+
 export interface N8nWebhookResponse {
   success: boolean
   timestamp: string
@@ -40,6 +50,7 @@ export interface N8nWebhookResponse {
   }
   states: N8nStateEntry[]
   europe: N8nEuropeEntry[]
+  cq_locations?: N8nCqLocation[]        // optional — feature-flagged on the n8n side
 }
 
 export type ConnectionStatus = 'idle' | 'connecting' | 'connected' | 'error' | 'stale'

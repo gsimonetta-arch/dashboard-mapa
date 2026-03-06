@@ -29,11 +29,21 @@ export interface CoverageSummary {
   europe: RegionSummary
 }
 
+export interface CqLocation {
+  id: string
+  lat: number
+  lng: number
+  state: string           // state / country code (e.g. "TX", "DE")
+  region: Region
+  status: 'feasible' | 'not_feasible'
+}
+
 export interface CoverageDataset {
   reportGeneratedAt: string
   periodLabel: string
   records: StateCoverageRecord[]
   summary: CoverageSummary
+  cqLocations: CqLocation[]
 }
 
 export type CoverageTier =

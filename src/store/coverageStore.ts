@@ -1,10 +1,11 @@
 import { create } from 'zustand'
-import type { CoverageDataset, StateCoverageRecord, StateCode, CoverageTier } from '../types/coverage.types'
+import type { CoverageDataset, StateCoverageRecord, StateCode, CoverageTier, CqLocation } from '../types/coverage.types'
 import { classifyTier } from '../utils/coverageClassifier'
 
 interface CoverageState {
   dataset: CoverageDataset | null
   recordsByState: Record<StateCode, StateCoverageRecord>
+  cqLocations: CqLocation[]
 
   ingestFullRefresh: (dataset: CoverageDataset) => void
   clearData: () => void
@@ -23,15 +24,17 @@ function buildIndex(records: StateCoverageRecord[]): Record<StateCode, StateCove
 export const useCoverageStore = create<CoverageState>((set, get) => ({
   dataset: null,
   recordsByState: {},
+  cqLocations: [],
 
   ingestFullRefresh: (dataset) => {
     set({
       dataset,
       recordsByState: buildIndex(dataset.records),
+      cqLocations: dataset.cqLocations,
     })
   },
 
-  clearData: () => set({ dataset: null, recordsByState: {} }),
+  clearData: () => set({ dataset: null, recordsByState: {}, cqLocations: [] }),
 
   getRecord: (stateCode) => get().recordsByState[stateCode],
 

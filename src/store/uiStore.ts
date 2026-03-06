@@ -10,12 +10,14 @@ interface UiState {
   tooltip: TooltipState
   connectionStatus: ConnectionStatus
   lastReceivedAt: string | null
+  showCqMarkers: boolean
 
   setActiveRegion: (region: Region) => void
   selectState: (code: StateCode | null) => void
   hoverState: (code: StateCode | null, x?: number, y?: number) => void
   setConnectionStatus: (status: ConnectionStatus) => void
   setLastReceivedAt: (ts: string) => void
+  toggleCqMarkers: () => void
 }
 
 export const useUiStore = create<UiState>((set) => ({
@@ -25,6 +27,7 @@ export const useUiStore = create<UiState>((set) => ({
   tooltip: { visible: false, stateCode: null, anchorX: 0, anchorY: 0 },
   connectionStatus: 'idle',
   lastReceivedAt: null,
+  showCqMarkers: false,
 
   setActiveRegion: (region) => set({ activeRegion: region, selectedStateCode: null }),
 
@@ -44,4 +47,6 @@ export const useUiStore = create<UiState>((set) => ({
   setConnectionStatus: (status) => set({ connectionStatus: status }),
 
   setLastReceivedAt: (ts) => set({ lastReceivedAt: ts }),
+
+  toggleCqMarkers: () => set((s) => ({ showCqMarkers: !s.showCqMarkers })),
 }))
