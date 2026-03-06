@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import type maplibregl from 'maplibre-gl'
 import type { Feature, FeatureCollection, Geometry } from 'geojson'
 import { useCoverageStore } from '../store/coverageStore'
@@ -6,65 +6,43 @@ import { useUiStore } from '../store/uiStore'
 import { classifyTier } from '../utils/coverageClassifier'
 import type { Region } from '../types/coverage.types'
 
-// Module-level cache so we only fetch each GeoJSON once per page load
-const geoJsonCache: Record<string, FeatureCollection> = {}
+// GeoJSON bundled at build time — no runtime fetch, no nginx dependency.
+// The Vite 'geojson' plugin in vite.config.ts transforms these imports.
+import usStatesGeoJson from '../data/us-states.geojson'
+import europeCountriesGeoJson from '../data/europe-countries.geojson'
 
-async function fetchGeoJson(url: string): Promise<FeatureCollection> {
-  if (geoJsonCache[url]) return geoJsonCache[url]
-  const res = await fetch(url)
-  const data = await res.json() as FeatureCollection
-  geoJsonCache[url] = data
-  return data
+const GEO_DATA: Record<string, FeatureCollection> = {
+  usa: usStatesGeoJson,
+  europe: europeCountriesGeoJson,
 }
 
 export function useChoropleth(
   mapRef: React.RefObject<maplibregl.Map | null>,
   isLoaded: boolean,
   sourceId: string,
-  geoJsonUrl: string,
   region: Region,
 ): void {
   const recordsByState = useCoverageStore(s => s.recordsByState)
   const selectedStateCode = useUiStore(s => s.selectedStateCode)
   const hoveredStateCode = useUiStore(s => s.hoveredStateCode)
 
-  // Cache for the raw GeoJSON (loaded once)
-  const baseGeoJsonRef = useRef<FeatureCollection | null>(null)
-
-  // Load base GeoJSON on mount
-  useEffect(() => {
-    fetchGeoJson(geoJsonUrl).then(data => {
-      baseGeoJsonRef.current = data
-    })
-  }, [geoJsonUrl])
-
-  // Update source data with tier embedded in feature properties.
-  // Using setData() instead of setFeatureState() is more reliable
-  // across MapLibre versions and avoids promoteId timing issues.
+  // Update map source with tier embedded in each feature's properties.
+  // Data is bundled — this runs synchronously, no async fetch needed.
   useEffect(() => {
     const map = mapRef.current
     if (!map || !isLoaded) return
 
-    const base = baseGeoJsonRef.current
-    if (!base) {
-      // Base GeoJSON not fetched yet — retry once it arrives
-      fetchGeoJson(geoJsonUrl).then(data => {
-        baseGeoJsonRef.current = data
-        const source = map.getSource(sourceId) as maplibregl.GeoJSONSource | undefined
-        if (!source) return
-        const updated = buildUpdatedGeoJson(data, recordsByState, region)
-        source.setData(updated)
-      })
-      return
-    }
+    const base = GEO_DATA[region]
+    if (!base) return
 
-    const source = map.getSource(sourceId) as maplibregl.GeoJSONSource | undefined
-    if (!source) return
-    const updated = buildUpdatedGeoJson(base, recordsByState, region)
-    source.setData(updated)
-  }, [mapRef, isLoaded, recordsByState, sourceId, geoJsonUrl, region])
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const source = map.getSource(sourceId) as any
+    if (!source?.setData) return
 
-  // Hover: update filter on the hovered overlay layer
+    source.setData(buildUpdatedGeoJson(base, recordsByState))
+  }, [mapRef, isLoaded, recordsByState, sourceId, region])
+
+  // Hover overlay filter
   useEffect(() => {
     const map = mapRef.current
     if (!map || !isLoaded) return
@@ -74,7 +52,7 @@ export function useChoropleth(
     map.setFilter(`${sourceId}-hovered`, filter)
   }, [mapRef, isLoaded, hoveredStateCode, sourceId])
 
-  // Selected: update filter on the selected outline layer
+  // Selected outline filter
   useEffect(() => {
     const map = mapRef.current
     if (!map || !isLoaded) return
@@ -88,7 +66,6 @@ export function useChoropleth(
 function buildUpdatedGeoJson(
   base: FeatureCollection,
   recordsByState: Record<string, { coverageRatio: number | null }>,
-  _region: Region,
 ): FeatureCollection {
   const features: Feature<Geometry>[] = base.features.map(f => {
     const code = f.id as string

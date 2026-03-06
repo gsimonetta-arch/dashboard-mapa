@@ -7,7 +7,7 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 
 export function EuropePanel() {
   const { mapRef, containerRef, isLoaded } = useMap(EUROPE_MAP_CONFIG)
-  useChoropleth(mapRef, isLoaded, EUROPE_MAP_CONFIG.sourceId, '/geodata/europe-countries.geojson', 'europe')
+  useChoropleth(mapRef, isLoaded, EUROPE_MAP_CONFIG.sourceId, 'europe')
   useMapInteraction(mapRef, isLoaded, `${EUROPE_MAP_CONFIG.sourceId}-fill`)
 
   return (

@@ -20,7 +20,7 @@ const NUMERIC_TO_ALPHA2 = {
   380: 'IT', // Italy
   528: 'NL', // Netherlands
   616: 'PL', // Poland
-   56: 'BE', // Belgium
+   56: 'BE', // Belgium      (ISO 3166-1 numeric 056)
   620: 'PT', // Portugal
   752: 'SE', // Sweden
   756: 'CH', // Switzerland
@@ -31,11 +31,11 @@ const NUMERIC_TO_ALPHA2 = {
   372: 'IE', // Ireland
   203: 'CZ', // Czech Republic
   642: 'RO', // Romania
-  348: 'HU', // Hungary
+  348: 'HU', // Hungary       (ISO 3166-1 numeric 348)
   300: 'GR', // Greece
   807: 'MK', // North Macedonia
   498: 'MD', // Moldova
-    8: 'AL', // Albania
+    8: 'AL', // Albania       (ISO 3166-1 numeric 008)
   428: 'LV', // Latvia
   233: 'EE', // Estonia
   442: 'LU', // Luxembourg
@@ -44,16 +44,16 @@ const NUMERIC_TO_ALPHA2 = {
   191: 'HR', // Croatia
   100: 'BG', // Bulgaria
   688: 'RS', // Serbia
-  348: 'HU', // Hungary (duplicate guard)
   499: 'ME', // Montenegro
-  070: 'BA', // Bosnia and Herzegovina
-  008: 'AL', // Albania (numeric with leading zero)
-  756: 'CH', // Switzerland (dup)
+   70: 'BA', // Bosnia and Herzegovina (ISO 3166-1 numeric 070 — decimal, not octal)
   438: 'LI', // Liechtenstein
   492: 'MC', // Monaco
   336: 'VA', // Vatican
   674: 'SM', // San Marino
-  020: 'AD', // Andorra
+   20: 'AD', // Andorra       (ISO 3166-1 numeric 020 — decimal, not octal)
+  440: 'LT', // Lithuania
+  112: 'BY', // Belarus
+  804: 'UA', // Ukraine
 }
 
 const EUROPE_NUMERIC_IDS = new Set(Object.keys(NUMERIC_TO_ALPHA2).map(Number))
