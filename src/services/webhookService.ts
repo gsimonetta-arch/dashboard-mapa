@@ -21,11 +21,32 @@ function mapUsaState(s: N8nStateEntry, now: string): StateCoverageRecord {
 }
 
 const COUNTRY_CODES: Record<string, string> = {
+  // Western Europe
   'United Kingdom': 'GB', 'Germany': 'DE', 'France': 'FR', 'Spain': 'ES',
   'Italy': 'IT', 'Netherlands': 'NL', 'Poland': 'PL', 'Belgium': 'BE',
   'Portugal': 'PT', 'Sweden': 'SE', 'Switzerland': 'CH', 'Austria': 'AT',
   'Denmark': 'DK', 'Norway': 'NO', 'Finland': 'FI', 'Ireland': 'IE',
   'Czech Republic': 'CZ', 'Romania': 'RO', 'Hungary': 'HU', 'Greece': 'GR',
+  // Eastern / Balkan Europe (common name variants from n8n)
+  'Albania': 'AL',
+  'Bosnia and Herzegovina': 'BA', 'Bosnia': 'BA',
+  'Bulgaria': 'BG',
+  'Croatia': 'HR',
+  'Estonia': 'EE',
+  'Kosovo': 'XK',
+  'Latvia': 'LV',
+  'Liechtenstein': 'LI',
+  'Lithuania': 'LT',
+  'Luxembourg': 'LU',
+  'Moldova': 'MD', 'Republic of Moldova': 'MD',
+  'Montenegro': 'ME',
+  'North Macedonia': 'MK', 'Macedonia': 'MK',
+  'Macedonia (former Yugoslav Republic)': 'MK',
+  'Serbia': 'RS',
+  'Slovakia': 'SK',
+  'Slovenia': 'SI',
+  'Ukraine': 'UA',
+  'Belarus': 'BY',
 }
 
 function mapEuropeCountry(c: N8nEuropeEntry, now: string): StateCoverageRecord {

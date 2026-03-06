@@ -1,4 +1,4 @@
-import { useMap } from '../../hooks/useMap'
+import { useMap, USA_MAP_CONFIG } from '../../hooks/useMap'
 import { useChoropleth } from '../../hooks/useChoropleth'
 import { useMapInteraction } from '../../hooks/useMapInteraction'
 import { MapLegend } from './MapLegend'
@@ -6,9 +6,9 @@ import { MapTooltip } from './MapTooltip'
 import 'maplibre-gl/dist/maplibre-gl.css'
 
 export function MapPanel() {
-  const { mapRef, containerRef, isLoaded } = useMap()
-  useChoropleth(mapRef, isLoaded)
-  useMapInteraction(mapRef, isLoaded)
+  const { mapRef, containerRef, isLoaded } = useMap(USA_MAP_CONFIG)
+  useChoropleth(mapRef, isLoaded, USA_MAP_CONFIG.sourceId, '/geodata/us-states.geojson', 'usa')
+  useMapInteraction(mapRef, isLoaded, `${USA_MAP_CONFIG.sourceId}-fill`)
 
   return (
     <div className="relative flex-1 bg-gray-950 min-w-0">

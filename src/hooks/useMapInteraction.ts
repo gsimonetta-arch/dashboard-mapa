@@ -4,7 +4,8 @@ import { useUiStore } from '../store/uiStore'
 
 export function useMapInteraction(
   mapRef: React.RefObject<maplibregl.Map | null>,
-  isLoaded: boolean
+  isLoaded: boolean,
+  fillLayerId: string,
 ): void {
   const selectState = useUiStore(s => s.selectState)
   const hoverState = useUiStore(s => s.hoverState)
@@ -14,8 +15,9 @@ export function useMapInteraction(
     if (!map || !isLoaded) return
 
     const onMouseMove = (e: maplibregl.MapMouseEvent) => {
-      const features = map.queryRenderedFeatures(e.point, { layers: ['states-fill'] })
+      const features = map.queryRenderedFeatures(e.point, { layers: [fillLayerId] })
       if (features.length > 0) {
+        // Feature ID is the alpha-2 / state code set as top-level `id` in the GeoJSON
         const code = features[0].id as string
         map.getCanvas().style.cursor = 'pointer'
         hoverState(code, e.point.x, e.point.y)
@@ -31,7 +33,7 @@ export function useMapInteraction(
     }
 
     const onClick = (e: maplibregl.MapMouseEvent) => {
-      const features = map.queryRenderedFeatures(e.point, { layers: ['states-fill'] })
+      const features = map.queryRenderedFeatures(e.point, { layers: [fillLayerId] })
       if (features.length > 0) {
         const code = features[0].id as string
         selectState(code)
@@ -49,5 +51,5 @@ export function useMapInteraction(
       map.off('mouseleave', onMouseLeave)
       map.off('click', onClick)
     }
-  }, [mapRef, isLoaded, selectState, hoverState])
+  }, [mapRef, isLoaded, fillLayerId, selectState, hoverState])
 }
