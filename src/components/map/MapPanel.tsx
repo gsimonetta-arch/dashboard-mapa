@@ -12,7 +12,7 @@ export function MapPanel() {
 
   return (
     <div className="relative flex-1 bg-gray-950 min-w-0">
-      <div ref={containerRef} className="absolute inset-0" />
+      <div ref={containerRef} style={{ position: 'absolute', inset: 0 }} />
       {isLoaded && (
         <>
           <MapLegend />
