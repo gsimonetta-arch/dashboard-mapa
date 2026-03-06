@@ -25,10 +25,14 @@ export function useMap(cfg: MapConfig): UseMapReturn {
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return
 
+    const el = containerRef.current
     const { sourceId } = cfg
 
+    // Diagnostic: log container dimensions before MapLibre init
+    console.log(`[useMap:${sourceId}] container size at init:`, el.offsetWidth, 'x', el.offsetHeight)
+
     const map = new maplibregl.Map({
-      container: containerRef.current,
+      container: el,
       style: {
         version: 8,
         sources: {},
@@ -47,9 +51,13 @@ export function useMap(cfg: MapConfig): UseMapReturn {
     })
 
     map.on('load', () => {
-      // Initialize source with full GeoJSON data so features render immediately.
-      // useChoropleth will call setData() again once coverage data arrives
-      // to overlay tier colors; until then, all features render as "no-data" gray.
+      // Diagnostic: log container dimensions at load time
+      console.log(`[useMap:${sourceId}] container size at load:`, el.offsetWidth, 'x', el.offsetHeight)
+      console.log(`[useMap:${sourceId}] initialData features:`, cfg.initialData.features.length)
+
+      // Force canvas to match container size in case init happened at 0×0
+      map.resize()
+
       map.addSource(sourceId, {
         type: 'geojson',
         data: cfg.initialData,
@@ -110,12 +118,26 @@ export function useMap(cfg: MapConfig): UseMapReturn {
         },
       })
 
+      console.log(`[useMap:${sourceId}] layers added, map ready`)
       setIsLoaded(true)
     })
+
+    map.on('error', (e) => {
+      console.error(`[useMap:${sourceId}] map error:`, e.error)
+    })
+
+    // ResizeObserver: notify MapLibre whenever the container changes size
+    const observer = new ResizeObserver(() => {
+      if (mapRef.current) {
+        mapRef.current.resize()
+      }
+    })
+    observer.observe(el)
 
     mapRef.current = map
 
     return () => {
+      observer.disconnect()
       map.remove()
       mapRef.current = null
       setIsLoaded(false)
