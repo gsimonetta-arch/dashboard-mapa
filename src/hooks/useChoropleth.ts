@@ -26,7 +26,7 @@ export function useChoropleth(
   const selectedStateCode = useUiStore(s => s.selectedStateCode)
   const hoveredStateCode = useUiStore(s => s.hoveredStateCode)
 
-  // Update map source with tier embedded in each feature's properties.
+  // Update map source with tier + code embedded in each feature's properties.
   // Data is bundled — this runs synchronously, no async fetch needed.
   useEffect(() => {
     const map = mapRef.current
@@ -42,13 +42,13 @@ export function useChoropleth(
     source.setData(buildUpdatedGeoJson(base, recordsByState))
   }, [mapRef, isLoaded, recordsByState, sourceId, region])
 
-  // Hover overlay filter
+  // Hover overlay filter — uses `code` property (not ['id']) for MapLibre v5 reliability
   useEffect(() => {
     const map = mapRef.current
     if (!map || !isLoaded) return
     const filter: maplibregl.FilterSpecification = hoveredStateCode
-      ? ['==', ['id'], hoveredStateCode]
-      : ['==', ['id'], '']
+      ? ['==', ['get', 'code'], hoveredStateCode]
+      : ['boolean', false]
     map.setFilter(`${sourceId}-hovered`, filter)
   }, [mapRef, isLoaded, hoveredStateCode, sourceId])
 
@@ -57,8 +57,8 @@ export function useChoropleth(
     const map = mapRef.current
     if (!map || !isLoaded) return
     const filter: maplibregl.FilterSpecification = selectedStateCode
-      ? ['==', ['id'], selectedStateCode]
-      : ['==', ['id'], '']
+      ? ['==', ['get', 'code'], selectedStateCode]
+      : ['boolean', false]
     map.setFilter(`${sourceId}-selected`, filter)
   }, [mapRef, isLoaded, selectedStateCode, sourceId])
 }
@@ -68,12 +68,12 @@ function buildUpdatedGeoJson(
   recordsByState: Record<string, { coverageRatio: number | null }>,
 ): FeatureCollection {
   const features: Feature<Geometry>[] = base.features.map(f => {
-    const code = f.id as string
+    const code = String(f.id ?? '')
     const record = recordsByState[code]
     const tier = classifyTier(record?.coverageRatio ?? null)
     return {
       ...f,
-      properties: { ...f.properties, tier },
+      properties: { ...f.properties, code, tier },
     }
   })
   return { type: 'FeatureCollection', features }

@@ -44,7 +44,7 @@ export function useMap(cfg: MapConfig): UseMapReturn {
 
     map.on('load', () => {
       // Source starts empty — useChoropleth fills it via setData()
-      // with `tier` embedded in feature properties, so no promoteId needed.
+      // with `tier` and `code` embedded in feature properties.
       map.addSource(sourceId, {
         type: 'geojson',
         data: { type: 'FeatureCollection', features: [] },
@@ -59,45 +59,45 @@ export function useMap(cfg: MapConfig): UseMapReturn {
           'fill-color': [
             'case',
             ['==', ['get', 'tier'], 'critical'],  '#DC2626',
-            ['==', ['get', 'tier'], 'low'],         '#F97316',
-            ['==', ['get', 'tier'], 'moderate'],    '#EAB308',
-            ['==', ['get', 'tier'], 'good'],         '#16A34A',
-            ['==', ['get', 'tier'], 'surplus'],      '#0891B2',
-            '#374151',
+            ['==', ['get', 'tier'], 'low'],        '#F97316',
+            ['==', ['get', 'tier'], 'moderate'],   '#EAB308',
+            ['==', ['get', 'tier'], 'good'],        '#16A34A',
+            ['==', ['get', 'tier'], 'surplus'],     '#0891B2',
+            '#6B7280', // no-data: gray-500 — visible on dark background
           ],
-          'fill-opacity': 0.8,
+          'fill-opacity': 0.85,
         },
       })
 
-      // Outline for all features
+      // Outline for all features — visible on dark background
       map.addLayer({
         id: `${sourceId}-outline`,
         type: 'line',
         source: sourceId,
         paint: {
-          'line-color': '#1F2937',
-          'line-width': 0.5,
+          'line-color': '#374151',
+          'line-width': 0.8,
         },
       })
 
-      // Hover overlay (filter updated dynamically by useMapInteraction)
+      // Hover overlay — filter uses `code` property (reliable across MapLibre versions)
       map.addLayer({
         id: `${sourceId}-hovered`,
         type: 'fill',
         source: sourceId,
-        filter: ['==', ['id'], ''],
+        filter: ['boolean', false], // hidden initially; updated by useChoropleth
         paint: {
           'fill-color': '#FFFFFF',
           'fill-opacity': 0.12,
         },
       })
 
-      // Selected feature bold outline (filter updated dynamically)
+      // Selected feature bold outline — filter uses `code` property
       map.addLayer({
         id: `${sourceId}-selected`,
         type: 'line',
         source: sourceId,
-        filter: ['==', ['id'], ''],
+        filter: ['boolean', false], // hidden initially; updated by useChoropleth
         paint: {
           'line-color': '#FFFFFF',
           'line-width': 2.5,

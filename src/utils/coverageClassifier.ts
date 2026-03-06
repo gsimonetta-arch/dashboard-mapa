@@ -12,7 +12,7 @@ export function classifyTier(ratio: number | null): CoverageTier {
 }
 
 export const TIER_COLORS: Record<CoverageTier, string> = {
-  'no-data':  '#374151',
+  'no-data':  '#6B7280',
   'critical': '#DC2626',
   'low':      '#F97316',
   'moderate': '#EAB308',

@@ -17,10 +17,12 @@ export function useMapInteraction(
     const onMouseMove = (e: maplibregl.MapMouseEvent) => {
       const features = map.queryRenderedFeatures(e.point, { layers: [fillLayerId] })
       if (features.length > 0) {
-        // Feature ID is the alpha-2 / state code set as top-level `id` in the GeoJSON
-        const code = features[0].id as string
-        map.getCanvas().style.cursor = 'pointer'
-        hoverState(code, e.point.x, e.point.y)
+        // `code` is embedded as a property by useChoropleth (reliable vs feature.id in v5)
+        const code = features[0].properties?.code as string | undefined
+        if (code) {
+          map.getCanvas().style.cursor = 'pointer'
+          hoverState(code, e.point.x, e.point.y)
+        }
       } else {
         map.getCanvas().style.cursor = ''
         hoverState(null)
@@ -35,8 +37,8 @@ export function useMapInteraction(
     const onClick = (e: maplibregl.MapMouseEvent) => {
       const features = map.queryRenderedFeatures(e.point, { layers: [fillLayerId] })
       if (features.length > 0) {
-        const code = features[0].id as string
-        selectState(code)
+        const code = features[0].properties?.code as string | undefined
+        if (code) selectState(code)
       } else {
         selectState(null)
       }
