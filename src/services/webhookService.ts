@@ -81,6 +81,10 @@ function parseN8nResponse(raw: N8nWebhookResponse): CoverageDataset {
     state: loc.state,
     region: loc.region ?? (loc.state.length === 2 ? 'usa' : 'europe'),
     status: loc.status,
+    city: loc.city,
+    address: loc.address,
+    totalCqs: loc.total_cqs,
+    cqsWithVq: loc.cqs_con_vq,
   }))
 
   return {

@@ -36,6 +36,10 @@ export interface CqLocation {
   state: string           // state / country code (e.g. "TX", "DE")
   region: Region
   status: 'feasible' | 'not_feasible'
+  city?: string
+  address?: string
+  totalCqs?: number
+  cqsWithVq?: number
 }
 
 export interface CoverageDataset {

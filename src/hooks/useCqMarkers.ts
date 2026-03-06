@@ -67,11 +67,18 @@ export function useCqMarkers(
       map.getCanvas().style.cursor = 'pointer'
       const f = e.features[0]
       const coords = (f.geometry as Point).coordinates as [number, number]
-      const { id, state, status } = f.properties as { id: string; state: string; status: string }
+      const { id, state, status, city, totalCqs, cqsWithVq } = f.properties as {
+        id: string; state: string; status: string
+        city?: string; totalCqs?: number; cqsWithVq?: number
+      }
       const label = status === 'feasible' ? '✓ Factible' : '✗ Sin cobertura'
+      const cityLine = city ? `<br/>${city}, ${state}` : `<br/>${state}`
+      const cqLine = totalCqs != null
+        ? `<br/><span style="font-size:0.85em">CQs: ${totalCqs} &nbsp;|&nbsp; Con VQ: ${cqsWithVq ?? 0}</span>`
+        : ''
       popup
         .setLngLat(coords)
-        .setHTML(`<b>${id}</b><br/>${state} &middot; ${label}`)
+        .setHTML(`<b>${id}</b>${cityLine} &middot; ${label}${cqLine}`)
         .addTo(map)
     })
 
@@ -99,7 +106,14 @@ export function useCqMarkers(
       features: filtered.map(loc => ({
         type: 'Feature',
         geometry: { type: 'Point', coordinates: [loc.lng, loc.lat] },
-        properties: { id: loc.id, state: loc.state, status: loc.status },
+        properties: {
+          id: loc.id,
+          state: loc.state,
+          status: loc.status,
+          city: loc.city,
+          totalCqs: loc.totalCqs,
+          cqsWithVq: loc.cqsWithVq,
+        },
       })),
     }
 

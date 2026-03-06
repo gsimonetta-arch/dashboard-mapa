@@ -31,7 +31,7 @@ export interface N8nRegionSummary {
   pct_feasible: number
 }
 
-/** Individual CQ location as returned by the webhook */
+/** Individual CQ location as returned by the webhook (mapped from spreadsheet row) */
 export interface N8nCqLocation {
   id: string
   lat: number
@@ -39,6 +39,11 @@ export interface N8nCqLocation {
   state: string                         // state/country code, e.g. "TX", "DE"
   region?: 'usa' | 'europe'
   status: 'feasible' | 'not_feasible'
+  // Enriched fields from spreadsheet
+  city?: string
+  address?: string
+  total_cqs?: number
+  cqs_con_vq?: number
 }
 
 export interface N8nWebhookResponse {
