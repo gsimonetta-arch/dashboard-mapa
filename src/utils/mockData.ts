@@ -167,6 +167,7 @@ export function buildMockDataset(): CoverageDataset {
     periodLabel: 'Q1 2026',
     records: allRecords,
     cqLocations: MOCK_CQ_LOCATIONS,
+    serviceTypeSummary: { BIA: 0, DIA: 0, Ethernet: 0, other: 0 },
     summary: {
       usa: {
         totalUnits: usaRecords.length,
