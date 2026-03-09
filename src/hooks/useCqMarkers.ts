@@ -23,8 +23,12 @@ export function useCqMarkers(
 ): void {
   const cqLocations  = useCoverageStore(s => s.cqLocations)
   const showCqMarkers = useUiStore(s => s.showCqMarkers)
-  const initializedRef = useRef(false)
-  const popupRef       = useRef<maplibregl.Popup | null>(null)
+  const initializedRef    = useRef(false)
+  const popupRef          = useRef<maplibregl.Popup | null>(null)
+  const showCqMarkersRef  = useRef(showCqMarkers)
+
+  // Keep the ref in sync so the init effect can read the latest value without re-running
+  showCqMarkersRef.current = showCqMarkers
 
   // Add source + layer once after the map is ready
   useEffect(() => {
@@ -39,7 +43,7 @@ export function useCqMarkers(
       id: LAYER_ID,
       type: 'circle',
       source: SOURCE_ID,
-      layout: { visibility: 'none' },
+      layout: { visibility: showCqMarkersRef.current ? 'visible' : 'none' },
       paint: {
         'circle-radius': 5,
         'circle-color': [
