@@ -44,6 +44,8 @@ export interface N8nCqLocation {
   address?: string
   total_cqs?: number
   cqs_con_vq?: number
+  service_type?: string                 // e.g. "BIA", "DIA", "Ethernet"
+  bw?: string                           // bandwidth, e.g. "100M", "1G"
 }
 
 export interface N8nWebhookResponse {

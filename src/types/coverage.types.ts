@@ -40,6 +40,15 @@ export interface CqLocation {
   address?: string
   totalCqs?: number
   cqsWithVq?: number
+  serviceType?: string    // e.g. "BIA", "DIA", "Ethernet"
+  bw?: string             // bandwidth, e.g. "100M", "1G"
+}
+
+export interface ServiceTypeSummary {
+  BIA: number
+  DIA: number
+  Ethernet: number
+  other: number           // any unrecognized service type
 }
 
 export interface CoverageDataset {
@@ -48,6 +57,7 @@ export interface CoverageDataset {
   records: StateCoverageRecord[]
   summary: CoverageSummary
   cqLocations: CqLocation[]
+  serviceTypeSummary: ServiceTypeSummary
 }
 
 export type CoverageTier =

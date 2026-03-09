@@ -1,5 +1,5 @@
 import type { N8nWebhookResponse, N8nStateEntry, N8nEuropeEntry } from '../types/webhook.types'
-import type { CoverageDataset, StateCoverageRecord, CqLocation } from '../types/coverage.types'
+import type { CoverageDataset, StateCoverageRecord, CqLocation, ServiceTypeSummary } from '../types/coverage.types'
 
 const WEBHOOK_URL = import.meta.env.VITE_WEBHOOK_URL as string | undefined
 
@@ -85,13 +85,25 @@ function parseN8nResponse(raw: N8nWebhookResponse): CoverageDataset {
     address: loc.address,
     totalCqs: loc.total_cqs,
     cqsWithVq: loc.cqs_con_vq,
+    serviceType: loc.service_type,
+    bw: loc.bw,
   }))
+
+  const serviceTypeSummary: ServiceTypeSummary = { BIA: 0, DIA: 0, Ethernet: 0, other: 0 }
+  for (const loc of cqLocations) {
+    const st = loc.serviceType?.trim()
+    if (st === 'BIA') serviceTypeSummary.BIA++
+    else if (st === 'DIA') serviceTypeSummary.DIA++
+    else if (st === 'Ethernet') serviceTypeSummary.Ethernet++
+    else if (st) serviceTypeSummary.other++
+  }
 
   return {
     reportGeneratedAt: raw.timestamp ?? now,
     periodLabel: 'En vivo',
     records: [...usaRecords, ...europeRecords],
     cqLocations,
+    serviceTypeSummary,
     summary: {
       usa: {
         totalUnits: usaSummary?.total_states ?? usaRecords.length,
