@@ -1,0 +1,3 @@
+# S2I environment — NPM_RUN is intentionally not set.
+# The build is triggered via postinstall in package.json.
+# S2I flow: npm install → (postinstall) npm run build → npm start
